@@ -1,23 +1,30 @@
 
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Heart, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/hooks/useCart';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { getTotalItems } = useCart();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results or filter products
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -57,20 +64,45 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-6">
-            {/* Login Button */}
-            <button 
-              onClick={() => alert('Please connect to Supabase for authentication functionality')}
-              className="hidden sm:flex items-center space-x-1 px-6 py-2 text-blue-600 bg-white hover:bg-gray-50 rounded-sm font-medium transition-colors"
-            >
-              <User size={18} />
-              <span>Login</span>
-            </button>
+            {/* Authentication */}
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="hidden sm:block text-sm">
+                  Hello, {user.user_metadata?.first_name || 'User'}
+                </span>
+                <button 
+                  onClick={handleSignOut}
+                  className="hidden sm:flex items-center space-x-1 px-4 py-2 text-blue-600 bg-white hover:bg-gray-50 rounded-sm font-medium transition-colors"
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="hidden sm:flex items-center space-x-1 px-6 py-2 text-blue-600 bg-white hover:bg-gray-50 rounded-sm font-medium transition-colors"
+              >
+                <User size={18} />
+                <span>Login</span>
+              </Link>
+            )}
+
+            {/* Wishlist */}
+            {user && (
+              <Link to="/wishlist" className="flex items-center space-x-1 hover:text-yellow-400 transition-colors">
+                <Heart size={20} />
+                <span className="hidden sm:block">Wishlist</span>
+              </Link>
+            )}
 
             {/* Cart */}
             <Link to="/cart" className="flex items-center space-x-1 hover:text-yellow-400 transition-colors">
               <ShoppingCart size={20} />
               <span className="hidden sm:block">Cart</span>
-              <span className="bg-red-500 text-xs px-1.5 py-0.5 rounded-full">0</span>
+              <span className="bg-red-500 text-xs px-1.5 py-0.5 rounded-full">
+                {user ? getTotalItems() : 0}
+              </span>
             </Link>
 
             {/* Mobile Menu Toggle */}
@@ -108,9 +140,6 @@ const Header = () => {
             <Link to="/category/electronics" className="hover:text-yellow-400 transition-colors font-medium">
               Electronics
             </Link>
-            <Link to="/category/appliances" className="hover:text-yellow-400 transition-colors font-medium">
-              TVs & Appliances
-            </Link>
             <Link to="/category/fashion" className="hover:text-yellow-400 transition-colors font-medium">
               Fashion
             </Link>
@@ -125,9 +154,6 @@ const Header = () => {
             </Link>
             <Link to="/category/beauty" className="hover:text-yellow-400 transition-colors font-medium">
               Beauty
-            </Link>
-            <Link to="/category/automotive" className="hover:text-yellow-400 transition-colors font-medium">
-              Automotive
             </Link>
           </div>
         </nav>
