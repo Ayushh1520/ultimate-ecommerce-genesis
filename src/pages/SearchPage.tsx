@@ -1,14 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { Filter, Grid, List, ChevronDown } from 'lucide-react';
-import { getProductsByCategory, categories } from '../data/products';
+import { useSearchParams } from 'react-router-dom';
+import { Filter, Grid, List } from 'lucide-react';
+import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-const CategoryPage = () => {
-  const { categoryId } = useParams<{ categoryId: string }>();
+const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   
@@ -19,12 +18,15 @@ const CategoryPage = () => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
 
-  const category = categories.find(cat => cat.id === categoryId);
-  const products = categoryId ? getProductsByCategory(categoryId) : [];
-
-  // Filter and sort products
+  // Filter and sort products based on search query
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = products.filter(product => {
+      // Search filter
+      const searchMatch = !searchQuery || 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase());
+      
       // Price filter
       const priceMatch = product.price >= priceRange.min && product.price <= priceRange.max;
       
@@ -34,13 +36,7 @@ const CategoryPage = () => {
       // Rating filter
       const ratingMatch = selectedRatings.length === 0 || selectedRatings.some(rating => product.rating >= rating);
       
-      // Search filter
-      const searchMatch = !searchQuery || 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      return priceMatch && brandMatch && ratingMatch && searchMatch;
+      return searchMatch && priceMatch && brandMatch && ratingMatch;
     });
 
     // Sort products
@@ -60,7 +56,7 @@ const CategoryPage = () => {
     });
 
     return sorted;
-  }, [products, priceRange, selectedBrands, selectedRatings, searchQuery, sortBy]);
+  }, [searchQuery, priceRange, selectedBrands, selectedRatings, sortBy]);
 
   const handleBrandChange = (brand: string, checked: boolean) => {
     if (checked) {
@@ -78,20 +74,14 @@ const CategoryPage = () => {
     }
   };
 
-  // Extract unique brands from products
-  const availableBrands = [...new Set(products.map(product => product.brand))];
-
-  if (!category) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Category not found</h1>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  // Extract unique brands from search results
+  const availableBrands = [...new Set(
+    products.filter(product => 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ).map(product => product.brand)
+  )];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,15 +90,14 @@ const CategoryPage = () => {
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="text-sm text-gray-600 mb-4">
-          <span>Home</span> / <span className="text-blue-600 font-medium">{category.name}</span>
-          {searchQuery && <span> / Search: "{searchQuery}"</span>}
+          <span>Home</span> / <span className="text-blue-600 font-medium">Search Results</span>
+          {searchQuery && <span> / "{searchQuery}"</span>}
         </nav>
 
-        {/* Category Header */}
+        {/* Search Header */}
         <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {category.icon} {category.name}
-            {searchQuery && <span className="text-lg text-gray-600 ml-2">- Search: "{searchQuery}"</span>}
+            Search Results {searchQuery && <span className="text-lg text-gray-600">for "{searchQuery}"</span>}
           </h1>
           <p className="text-gray-600">
             Showing {filteredAndSortedProducts.length} products
@@ -143,22 +132,24 @@ const CategoryPage = () => {
             </div>
 
             {/* Brand Filter */}
-            <div className="mb-6">
-              <h4 className="font-semibold mb-3">Brand</h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {availableBrands.map(brand => (
-                  <label key={brand} className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="mr-2"
-                      checked={selectedBrands.includes(brand)}
-                      onChange={(e) => handleBrandChange(brand, e.target.checked)}
-                    />
-                    <span className="text-sm">{brand}</span>
-                  </label>
-                ))}
+            {availableBrands.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold mb-3">Brand</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {availableBrands.map(brand => (
+                    <label key={brand} className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-2"
+                        checked={selectedBrands.includes(brand)}
+                        onChange={(e) => handleBrandChange(brand, e.target.checked)}
+                      />
+                      <span className="text-sm">{brand}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Rating Filter */}
             <div className="mb-6">
@@ -251,7 +242,9 @@ const CategoryPage = () => {
 
             {filteredAndSortedProducts.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+                <p className="text-gray-500 text-lg">
+                  {searchQuery ? `No products found for "${searchQuery}"` : 'No products found matching your criteria.'}
+                </p>
                 <button
                   onClick={() => {
                     setPriceRange({ min: 0, max: 200000 });
@@ -273,4 +266,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default SearchPage;

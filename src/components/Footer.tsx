@@ -19,10 +19,38 @@ const Footer = () => {
               India's leading e-commerce platform offering millions of products at the best prices.
             </p>
             <div className="flex space-x-4">
-              <Facebook className="w-5 h-5 text-gray-400 hover:text-blue-500 cursor-pointer transition-colors" />
-              <Twitter className="w-5 h-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
-              <Instagram className="w-5 h-5 text-gray-400 hover:text-pink-500 cursor-pointer transition-colors" />
-              <Youtube className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" />
+              <a 
+                href="https://www.facebook.com/flipkart" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-blue-500 cursor-pointer transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://twitter.com/flipkart" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors"
+              >
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://www.instagram.com/flipkart" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-pink-500 cursor-pointer transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://www.youtube.com/flipkart" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-red-500 cursor-pointer transition-colors"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
             </div>
           </div>
 
@@ -30,11 +58,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Press</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Investor Relations</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Gift Cards</a></li>
+              <li><a href="https://www.flipkart.com/pages/about" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+              <li><a href="https://www.flipkart.com/careers" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+              <li><a href="https://stories.flipkart.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Press</a></li>
+              <li><a href="https://investor.flipkart.com/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Investor Relations</a></li>
+              <li><a href="https://www.flipkart.com/gift-card-store" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Gift Cards</a></li>
             </ul>
           </div>
 
@@ -42,11 +70,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Returns</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Shipping Info</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Track Your Order</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+              <li><a href="https://www.flipkart.com/helpcentre" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="https://www.flipkart.com/pages/returnpolicy" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Returns</a></li>
+              <li><a href="https://www.flipkart.com/pages/shippingpolicy" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Shipping Info</a></li>
+              <li><a href="https://www.flipkart.com/account/orders" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Track Your Order</a></li>
+              <li><a href="https://www.flipkart.com/helpcentre?catalog=55c9c6edb0062d0b30002b69&view=CONTACT" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
             </ul>
           </div>
 
@@ -76,9 +104,9 @@ const Footer = () => {
             © 2024 Flipkart Clone. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
+            <a href="https://www.flipkart.com/pages/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+            <a href="https://www.flipkart.com/pages/terms" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+            <a href="https://www.flipkart.com/pages/cookies" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
           </div>
         </div>
       </div>

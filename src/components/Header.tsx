@@ -1,10 +1,24 @@
 
 import React, { useState } from 'react';
 import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results or filter products
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white sticky top-0 z-50 shadow-lg">
@@ -24,22 +38,30 @@ const Header = () => {
 
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <input
                 type="text"
                 placeholder="Search for products, brands and more..."
+                value={searchQuery}
+                onChange={handleSearchInput}
                 className="w-full px-4 py-2.5 pr-12 text-gray-800 bg-white rounded-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
               />
-              <button className="absolute right-0 top-0 h-full px-4 bg-yellow-400 text-blue-700 hover:bg-yellow-500 transition-colors rounded-r-sm">
+              <button 
+                type="submit"
+                className="absolute right-0 top-0 h-full px-4 bg-yellow-400 text-blue-700 hover:bg-yellow-500 transition-colors rounded-r-sm"
+              >
                 <Search size={20} />
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-6">
             {/* Login Button */}
-            <button className="hidden sm:flex items-center space-x-1 px-6 py-2 text-blue-600 bg-white hover:bg-gray-50 rounded-sm font-medium transition-colors">
+            <button 
+              onClick={() => alert('Please connect to Supabase for authentication functionality')}
+              className="hidden sm:flex items-center space-x-1 px-6 py-2 text-blue-600 bg-white hover:bg-gray-50 rounded-sm font-medium transition-colors"
+            >
               <User size={18} />
               <span>Login</span>
             </button>
@@ -63,16 +85,21 @@ const Header = () => {
 
         {/* Mobile Search */}
         <div className="md:hidden pb-3">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
               placeholder="Search for products, brands and more..."
+              value={searchQuery}
+              onChange={handleSearchInput}
               className="w-full px-4 py-2.5 pr-12 text-gray-800 bg-white rounded-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
-            <button className="absolute right-0 top-0 h-full px-4 bg-yellow-400 text-blue-700 hover:bg-yellow-500 transition-colors rounded-r-sm">
+            <button 
+              type="submit"
+              className="absolute right-0 top-0 h-full px-4 bg-yellow-400 text-blue-700 hover:bg-yellow-500 transition-colors rounded-r-sm"
+            >
               <Search size={20} />
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Navigation */}
@@ -81,7 +108,7 @@ const Header = () => {
             <Link to="/category/electronics" className="hover:text-yellow-400 transition-colors font-medium">
               Electronics
             </Link>
-            <Link to="/category/fashion" className="hover:text-yellow-400 transition-colors font-medium">
+            <Link to="/category/appliances" className="hover:text-yellow-400 transition-colors font-medium">
               TVs & Appliances
             </Link>
             <Link to="/category/fashion" className="hover:text-yellow-400 transition-colors font-medium">
