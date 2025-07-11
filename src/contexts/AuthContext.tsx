@@ -7,9 +7,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  getSavedCredentials: () => { email: string; password: string } | null;
+  clearSavedCredentials: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,8 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('profiles')
           .insert({
             id: user.id,
-            first_name: user.user_metadata?.first_name || '',
-            last_name: user.user_metadata?.last_name || '',
+            first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || '',
+            last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
           });
 
         if (error) {
@@ -82,15 +85,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const getSavedCredentials = () => {
+    try {
+      const saved = localStorage.getItem('flipkart_saved_credentials');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearSavedCredentials = () => {
+    localStorage.removeItem('flipkart_saved_credentials');
+  };
+
+  const saveCredentials = (email: string, password: string) => {
+    const credentials = { email, password };
+    localStorage.setItem('flipkart_saved_credentials', JSON.stringify(credentials));
+  };
+
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
       setLoading(true);
+      
+      // Clean up any existing auth state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
+      
+      // Save credentials if remember me is checked
+      if (rememberMe) {
+        saveCredentials(email, password);
+      } else {
+        clearSavedCredentials();
+      }
       
       return { error: null };
     } catch (error) {
@@ -101,9 +137,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+      
+      // Clean up any existing auth state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        }
+      });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       setLoading(true);
+      
+      // Clean up any existing auth state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -130,7 +203,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
+      
+      // Clear saved credentials
+      clearSavedCredentials();
+      
+      // Clear auth state from localStorage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) throw error;
       
       // Force page reload for clean state
@@ -147,8 +231,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     loading,
     signIn,
+    signInWithGoogle,
     signUp,
     signOut,
+    getSavedCredentials,
+    clearSavedCredentials,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
