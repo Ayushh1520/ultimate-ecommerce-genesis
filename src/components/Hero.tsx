@@ -9,21 +9,21 @@ const Hero = () => {
       title: 'Big Billion Days',
       subtitle: 'Biggest Sale of the Year',
       image: 'https://images.unsplash.com/photo-1607083206869-4c7672e1c6e8?w=800',
-      bgColor: 'from-purple-600 to-pink-600'
+      gradient: 'from-purple-600 to-pink-600'
     },
     {
       id: 2,
       title: 'Electronics Sale',
       subtitle: 'Up to 80% Off on Mobiles & Laptops',
       image: 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800',
-      bgColor: 'from-blue-600 to-cyan-600'
+      gradient: 'from-blue-600 to-cyan-600'
     },
     {
       id: 3,
       title: 'Fashion Fiesta',
       subtitle: 'Trendy Styles at Unbeatable Prices',
       image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800',
-      bgColor: 'from-green-600 to-teal-600'
+      gradient: 'from-green-600 to-teal-600'
     }
   ];
 
@@ -60,10 +60,7 @@ const Hero = () => {
               key={banner.id}
               className="relative h-48 rounded-lg overflow-hidden group cursor-pointer transform hover:scale-105 transition-transform duration-300"
             >
-              <div className="absolute inset-0 bg-gradient-to-r opacity-90 z-10" style={{
-                background: `linear-gradient(135deg, ${banner.bgColor.split(' ')[0].split('-')[1] === 'purple' ? '#9333ea' : banner.bgColor.split(' ')[0].split('-')[1] === 'blue' ? '#2563eb' : '#059669'}, ${banner.bgColor.split(' ')[2].split('-')[1] === 'pink' ? '#ec4899' : banner.bgColor.split(' ')[2].split('-')[1] === 'cyan' ? '#0891b2' : '#0d9488'})`
-              }}>
-              </div>
+              <div className={`absolute inset-0 bg-gradient-to-r ${banner.gradient} opacity-90 z-10`}></div>
               <img
                 src={banner.image}
                 alt={banner.title}
