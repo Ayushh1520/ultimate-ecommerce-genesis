@@ -1,11 +1,14 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Grid, List } from 'lucide-react';
-import { products } from '../data/products';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+
+type Product = Tables<'products'>;
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +20,30 @@ const SearchPage = () => {
   const [priceRange, setPriceRange] = useState({ min: 0, max: 200000 });
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      
+      try {
+        const { data: productsData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true);
+        
+        setProducts(productsData || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Filter and sort products based on search query
   const filteredAndSortedProducts = useMemo(() => {
@@ -24,17 +51,17 @@ const SearchPage = () => {
       // Search filter
       const searchMatch = !searchQuery || 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase());
+        (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
       // Price filter
       const priceMatch = product.price >= priceRange.min && product.price <= priceRange.max;
       
       // Brand filter
-      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
+      const brandMatch = selectedBrands.length === 0 || (product.brand && selectedBrands.includes(product.brand));
       
       // Rating filter
-      const ratingMatch = selectedRatings.length === 0 || selectedRatings.some(rating => product.rating >= rating);
+      const ratingMatch = selectedRatings.length === 0 || selectedRatings.some(rating => (product.rating || 0) >= rating);
       
       return searchMatch && priceMatch && brandMatch && ratingMatch;
     });
@@ -47,16 +74,16 @@ const SearchPage = () => {
         case 'price-high':
           return b.price - a.price;
         case 'rating':
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case 'discount':
-          return b.discount - a.discount;
+          return (b.discount_percentage || 0) - (a.discount_percentage || 0);
         default:
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
       }
     });
 
     return sorted;
-  }, [searchQuery, priceRange, selectedBrands, selectedRatings, sortBy]);
+  }, [searchQuery, priceRange, selectedBrands, selectedRatings, sortBy, products]);
 
   const handleBrandChange = (brand: string, checked: boolean) => {
     if (checked) {
@@ -77,11 +104,24 @@ const SearchPage = () => {
   // Extract unique brands from search results
   const availableBrands = [...new Set(
     products.filter(product => 
+      !searchQuery ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase())
-    ).map(product => product.brand)
+      (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    ).map(product => product.brand).filter(Boolean)
   )];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-12 text-center">
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -258,7 +298,7 @@ const SearchPage = () => {
               </div>
             )}
           </div>
-        </div>
+        </</div>
       </div>
 
       <Footer />

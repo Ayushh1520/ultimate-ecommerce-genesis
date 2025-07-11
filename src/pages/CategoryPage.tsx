@@ -1,11 +1,15 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Filter, Grid, List, ChevronDown } from 'lucide-react';
-import { getProductsByCategory, categories } from '../data/products';
+import { Filter, Grid, List } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+
+type Product = Tables<'products'>;
+type Category = Tables<'categories'>;
 
 const CategoryPage = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -18,9 +22,44 @@ const CategoryPage = () => {
   const [priceRange, setPriceRange] = useState({ min: 0, max: 200000 });
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  
+  const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const category = categories.find(cat => cat.id === categoryId);
-  const products = categoryId ? getProductsByCategory(categoryId) : [];
+  useEffect(() => {
+    const fetchCategoryAndProducts = async () => {
+      if (!categoryId) return;
+      
+      setLoading(true);
+      
+      try {
+        // Fetch category
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('id', categoryId)
+          .single();
+        
+        setCategory(categoryData);
+        
+        // Fetch products for this category
+        const { data: productsData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('category_id', categoryId)
+          .eq('is_active', true);
+        
+        setProducts(productsData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategoryAndProducts();
+  }, [categoryId]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
@@ -29,16 +68,16 @@ const CategoryPage = () => {
       const priceMatch = product.price >= priceRange.min && product.price <= priceRange.max;
       
       // Brand filter
-      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
+      const brandMatch = selectedBrands.length === 0 || (product.brand && selectedBrands.includes(product.brand));
       
       // Rating filter
-      const ratingMatch = selectedRatings.length === 0 || selectedRatings.some(rating => product.rating >= rating);
+      const ratingMatch = selectedRatings.length === 0 || selectedRatings.some(rating => (product.rating || 0) >= rating);
       
       // Search filter
       const searchMatch = !searchQuery || 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase());
+        (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
       return priceMatch && brandMatch && ratingMatch && searchMatch;
     });
@@ -51,11 +90,11 @@ const CategoryPage = () => {
         case 'price-high':
           return b.price - a.price;
         case 'rating':
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case 'discount':
-          return b.discount - a.discount;
+          return (b.discount_percentage || 0) - (a.discount_percentage || 0);
         default:
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
       }
     });
 
@@ -79,7 +118,19 @@ const CategoryPage = () => {
   };
 
   // Extract unique brands from products
-  const availableBrands = [...new Set(products.map(product => product.brand))];
+  const availableBrands = [...new Set(products.map(product => product.brand).filter(Boolean))];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-12 text-center">
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!category) {
     return (
@@ -107,7 +158,7 @@ const CategoryPage = () => {
         {/* Category Header */}
         <div className="bg-white rounded-lg p-6 mb-6 shadow-sm">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {category.icon} {category.name}
+            {category.name}
             {searchQuery && <span className="text-lg text-gray-600 ml-2">- Search: "{searchQuery}"</span>}
           </h1>
           <p className="text-gray-600">
@@ -143,22 +194,24 @@ const CategoryPage = () => {
             </div>
 
             {/* Brand Filter */}
-            <div className="mb-6">
-              <h4 className="font-semibold mb-3">Brand</h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {availableBrands.map(brand => (
-                  <label key={brand} className="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      className="mr-2"
-                      checked={selectedBrands.includes(brand)}
-                      onChange={(e) => handleBrandChange(brand, e.target.checked)}
-                    />
-                    <span className="text-sm">{brand}</span>
-                  </label>
-                ))}
+            {availableBrands.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold mb-3">Brand</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {availableBrands.map(brand => (
+                    <label key={brand} className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="mr-2"
+                        checked={selectedBrands.includes(brand)}
+                        onChange={(e) => handleBrandChange(brand, e.target.checked)}
+                      />
+                      <span className="text-sm">{brand}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Rating Filter */}
             <div className="mb-6">
