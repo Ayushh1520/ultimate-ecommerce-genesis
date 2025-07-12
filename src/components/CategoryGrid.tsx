@@ -65,9 +65,13 @@ const CategoryGrid = () => {
             >
               <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors overflow-hidden">
                 <img 
-                  src={category.image_url} 
+                  src={category.image_url || '/placeholder.svg'} 
                   alt={category.name}
                   className="w-16 h-16 object-cover rounded-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
                 />
               </div>
               <h3 className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">

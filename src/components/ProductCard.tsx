@@ -60,9 +60,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' })
         {/* Product Image */}
         <div className="relative overflow-hidden">
           <img
-            src={product.image_url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400'}
+            src={product.image_url || '/placeholder.svg'}
             alt={product.name}
             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder.svg';
+            }}
           />
           {product.discount_percentage > 0 && (
             <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-sm text-xs font-bold">

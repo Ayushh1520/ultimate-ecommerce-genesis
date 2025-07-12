@@ -1,13 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, User, Menu, X, Heart, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/hooks/useCart';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
@@ -26,6 +33,24 @@ const Header = () => {
   const handleSignOut = async () => {
     await signOut();
   };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, name')
+          .limit(6);
+
+        if (error) throw error;
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white sticky top-0 z-50 shadow-lg">
@@ -137,24 +162,22 @@ const Header = () => {
         {/* Navigation */}
         <nav className={`${isMenuOpen ? 'block' : 'hidden'} md:block border-t border-blue-500`}>
           <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-8 py-3">
-            <Link to="/category/electronics" className="hover:text-yellow-400 transition-colors font-medium">
-              Electronics
-            </Link>
-            <Link to="/category/fashion" className="hover:text-yellow-400 transition-colors font-medium">
-              Fashion
-            </Link>
-            <Link to="/category/home" className="hover:text-yellow-400 transition-colors font-medium">
-              Home & Furniture
-            </Link>
-            <Link to="/category/books" className="hover:text-yellow-400 transition-colors font-medium">
-              Books
-            </Link>
-            <Link to="/category/sports" className="hover:text-yellow-400 transition-colors font-medium">
-              Sports
-            </Link>
-            <Link to="/category/beauty" className="hover:text-yellow-400 transition-colors font-medium">
-              Beauty
-            </Link>
+            {categories.length > 0 ? (
+              categories.map((category) => (
+                <Link 
+                  key={category.id}
+                  to={`/category/${category.id}`} 
+                  className="hover:text-yellow-400 transition-colors font-medium"
+                >
+                  {category.name}
+                </Link>
+              ))
+            ) : (
+              // Loading state for categories
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="h-6 bg-blue-400/20 rounded animate-pulse w-20"></div>
+              ))
+            )}
           </div>
         </nav>
       </div>
