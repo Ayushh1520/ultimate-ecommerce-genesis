@@ -20,9 +20,10 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  viewMode?: 'grid' | 'list';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = 'grid' }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
