@@ -60,7 +60,7 @@ const CategoryGrid = () => {
           {categories.map((category) => (
             <Link
               key={category.id}
-              to={`/category/${category.name.toLowerCase()}`}
+              to={`/category/${category.id}`}
               className="group text-center hover:scale-105 transition-transform duration-300"
             >
               <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-colors overflow-hidden">
